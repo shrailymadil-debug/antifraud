@@ -1,0 +1,13 @@
+# окружение и кэш
+.venv/
+__pycache__/
+*.pyc
+
+# данные (Sparkov fraudTrain.csv / fraudTest.csv — скачиваются отдельно)
+data/
+scored*.csv
+
+# локальное
+_backup*/
+_git_upload_tmp/
+Неделя2_для_защиты/
