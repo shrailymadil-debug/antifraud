@@ -1,4 +1,4 @@
-"""Модели с общим интерфейсом: fit / predict_proba / contributions (PROJECT_RULES.md, раздел 8).
+"""Модели с общим интерфейсом: fit / predict_proba / contributions (CLAUDE.md, раздел 8).
 
 Гиперпараметры фиксированы и не тюнятся — решение команды.
 """

@@ -1,4 +1,4 @@
-"""Единый «судья» (PROJECT_RULES.md, раздел 9).
+"""Единый «судья» (CLAUDE.md, раздел 9).
 
 python -m src.evaluate --config configs/b.yaml                       # весь конфиг
 python -m src.evaluate --config configs/b.yaml --add b_int_1h b_int_24h   # добавлять признаки по одному

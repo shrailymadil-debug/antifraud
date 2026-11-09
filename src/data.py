@@ -13,7 +13,7 @@ DATA_DIR = ROOT / "data"
 CACHE_DIR = DATA_DIR / "cache"
 TRAIN_CSV = DATA_DIR / "fraudTrain.csv"
 
-# Персональные данные и поля, которые не используем (см. PROJECT_RULES.md, раздел 2).
+# Персональные данные и поля, которые не используем (см. CLAUDE.md, раздел 2).
 DROP_COLS = ["first", "last", "street", "zip", "job", "unix_time"]
 
 READ_DTYPES = {

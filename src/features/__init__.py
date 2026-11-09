@@ -1,4 +1,4 @@
-"""Реестр блоков признаков. У каждого блока одинаковый интерфейс (PROJECT_RULES.md, раздел 6)."""
+"""Реестр блоков признаков. У каждого блока одинаковый интерфейс (CLAUDE.md, раздел 6)."""
 import importlib
 
 BLOCK_MODULES = {
@@ -6,6 +6,7 @@ BLOCK_MODULES = {
     "a": "src.features.profile",
     "b": "src.features.velocity",
     "c": "src.features.context",
+    "e": "src.features.episode",
 }
 
 

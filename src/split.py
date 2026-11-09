@@ -1,4 +1,4 @@
-"""Разбиение по времени: train / valid / holdout (PROJECT_RULES.md, раздел 3)."""
+"""Разбиение по времени: train / valid / holdout (CLAUDE.md, раздел 3)."""
 import pandas as pd
 
 VALID_DAYS = 61

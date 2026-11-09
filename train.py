@@ -1,4 +1,4 @@
-"""Обучение и сохранение артефактов (PROJECT_RULES.md, раздел 12).
+"""Обучение и сохранение артефактов (CLAUDE.md, раздел 12).
 
 python train.py --config configs/final.yaml
 

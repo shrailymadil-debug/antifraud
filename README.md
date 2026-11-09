@@ -1,76 +1,201 @@
-# Антифрод-пайплайн (Sparkov, fraudTrain.csv)
+<p align="center">
+  <img src="docs/images/banner.png" alt="Антифрод в реальном времени" width="100%">
+</p>
 
-Система каждый день выбирает операции для проверки аналитиками так, чтобы спасти больше всего денег при лимите 0,3% операций в сутки. На отложенных двух месяцах (22.04–21.06.2020) экономия — **323 389 у.е., 98,7% от возможного** при таком штате аналитиков.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/LightGBM-модель-9ACD32" alt="LightGBM">
+  <img src="https://img.shields.io/badge/FastAPI-сервис-009688?logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Streamlit-интерфейс-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit">
+  <img src="https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">
+</p>
 
-## Установка (один раз)
+<p align="center">
+  <b>Проект курса «Инженерия признаков»</b> · датасет Sparkov (1,85 млн операций по картам)<br>
+  Команда: <b>Назлы</b> · <b>Лия</b> · <b>Шырайлым</b>
+</p>
 
-Python 3.14, Windows. Версии библиотек зафиксированы, seed = 42.
+---
 
-```
-python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
+Система находит мошеннические операции по банковским картам. Начинали с модели на исторических данных и за пять недель довели её до работающего сервиса. Операция приходит по одной, через ≈ 0,15 с выходит решение «фрод / не фрод» с объяснением. Каждое решение записывается в PostgreSQL, а панель мониторинга показывает здоровье сервиса и качество модели.
 
-Положить `fraudTrain.csv` в `data/`.
+## Главные результаты
 
-## Обучение — одна команда
-
-```
-.venv\Scripts\python.exe train.py --config configs/final.yaml
-```
-
-≈ 1 минута при первом запуске (считаются и кэшируются признаки), потом ≈ 15 секунд. Результат — `artifacts/final/`.
-
-## Скоринг — одна команда
-
-```
-.venv\Scripts\python.exe score.py --input <входной_csv> --output <выходной_csv>
-```
-
-- Вход — та же структура, что `fraudTrain.csv`, без `is_fraud`; порядок строк любой.
-- Выход: `trans_num, fraud_probability, decision, reason_1, reason_2, reason_3` (причины — только у `decision = 1`).
-- Модель не переобучается, в сеть не ходит. 550 000 строк — 32 с, 2 ГБ памяти.
-
-## Проверки
-
-```
-.venv\Scripts\python.exe -m tests.test_no_future_leak --block a      # тест на утечку (a, b, c, base)
-.venv\Scripts\python.exe -m tests.test_leak_canary                   # тест ловит заведомые утечки
-.venv\Scripts\python.exe -m tests.test_score_robustness              # score.py: 11 проверок + нагрузка
-```
-
-## Воспроизвести исследование
-
-```
-.venv\Scripts\python.exe -m src.eda                                  # разведка (только train)
-.venv\Scripts\python.exe -m src.evaluate --config configs/baseline_ev.yaml
-.venv\Scripts\python.exe -m src.evaluate --config configs/a.yaml --add a_cat_bits a_time_bits ...
-.venv\Scripts\python.exe -m experiments.c_experiments
-.venv\Scripts\python.exe -m experiments.tournament
-.venv\Scripts\python.exe -m experiments.scenarios
-.venv\Scripts\python.exe -m src.evaluate --config configs/final.yaml --holdout
-.venv\Scripts\python.exe -m experiments.economics_report
-.venv\Scripts\python.exe -m experiments.build_feature_map
-.venv\Scripts\python.exe -m experiments.examples
-```
-
-Каждый прогон дописывается в `reports/experiments.csv`.
-
-## Где что лежит
-
-| Путь | Что |
+| Что | Результат |
 |---|---|
-| `reports/report.md` | отчёт (до 5 страниц) |
-| `reports/feature_map.md`, `.csv` | карта признаков: гипотеза, вклад в у.е., тест на утечку, отличие от типичного решения |
-| `reports/decision_log.md` | журнал решений |
-| `reports/tournament.md` | турнир: наборы признаков × модели |
-| `reports/scenarios.md` | кто какой сценарий ловит |
-| `reports/economics.md` | экономика на холдауте, стресс-тест, сколько аналитиков |
-| `reports/examples.md` | реальные карточки для аналитика |
-| `presentation/antifraud.pptx` | презентация с заметками |
-| `presentation/cheatsheet.md` | шпаргалка к защите |
-| `src/features/profile.py`, `velocity.py`, `context.py` | блоки A, B, C |
-| `src/economics.py` | стоимость, лимит, политики выбора |
-| `tasks/TASK_*.md`, `PROJECT_RULES.md` | исходные задания |
+| 💰 **Экономия на отложенном периоде** | **323 389 у.е.** — 98,7% от максимума, возможного при лимите аналитиков 0,3% операций в день |
+| 🎯 **Качество модели (valid, порог 0,5)** | точность **98,3%**, чувствительность **94,1%** |
+| 🔁 **Вторая итерация (v2)** | **+3 462 у.е.** на новом периоде, разрыв между оценкой и фактом сократился с 1,1 до 0,0 п.п. |
+| ⚡ **Сервис в реальном времени** | ≈ **0,15 с** на операцию, расхождение с пакетным `score.py` — **0** на 300 операциях |
+| 🛡️ **Серия из 200 операций holdout** | поймано **13 из 13** мошеннических, ложных тревог **0** |
+| 🐘 **Надёжность** | данные переживают перезапуск; при падении базы ответ 503 за 0,15 с и восстановление без перезапуска |
 
-`data/fraudTest.csv` не использовался.
+## Как это выглядит
+
+<table>
+<tr>
+<td width="50%"><b>Интерфейс оператора</b> — операция, решение, причины, сверка с фактом<br><img src="docs/images/operator.png" alt="Интерфейс оператора"></td>
+<td width="50%"><b>Панель мониторинга</b> — показатели считаются SQL-запросами к PostgreSQL<br><img src="docs/images/dashboard.png" alt="Панель мониторинга"></td>
+</tr>
+</table>
+
+<details>
+<summary><b>Что видно, если база данных недоступна</b></summary>
+<br>
+<img src="docs/images/db_down_operator.png" alt="Оператор: база недоступна" width="49%">
+<img src="docs/images/db_down_dashboard.png" alt="Панель: база недоступна" width="49%">
+</details>
+
+## Архитектура
+
+```mermaid
+flowchart TB
+  subgraph users["Пользователи"]
+    FE["🖥️ Интерфейс оператора<br/>Streamlit :8501"]
+    DA["📊 Панель мониторинга<br/>Streamlit :8502"]
+    AD["🔍 Adminer :8080"]
+  end
+  BE["⚙️ backend · FastAPI :8000<br/>LightGBM v2 + история карт<br/>/predict · /label · /metrics · /health"]
+  DB[("🐘 PostgreSQL 16<br/>request_log · transactions · labels")]
+  VOL[["💾 том pgdata"]]
+  FE -- HTTP/JSON --> BE
+  DA -- HTTP/JSON --> BE
+  BE -- SQL --> DB
+  AD -- SQL --> DB
+  DB --- VOL
+```
+
+- **Интерфейс и панель не загружают модель и не читают базу**: всё идёт через API сервиса.
+- **Порядок старта**: `db` (healthcheck `pg_isready`) → `backend` (healthcheck `/health`) → интерфейс и панель.
+- **Данные в именованном томе `pgdata`**: после `docker compose down` / `up` ничего не теряется.
+
+## Быстрый старт
+
+Нужен только **Docker Desktop**.
+
+```bash
+copy .env.example .env          # пароль базы (в git не попадает)
+docker compose up -d --build    # 5 контейнеров
+docker compose ps               # db и backend — (healthy)
+```
+
+На Windows то же самое делает двойной клик по **`zapusk_docker.bat`**.
+
+| Адрес | Что |
+|---|---|
+| http://localhost:8501 | интерфейс оператора |
+| http://localhost:8502 | панель мониторинга |
+| http://localhost:8000/docs | API сервиса (Swagger) |
+| http://localhost:8080 | Adminer: PostgreSQL, сервер `db`, логин и пароль из `.env`, база `antifraud` |
+
+> [!NOTE]
+> Первый запуск готовит историю карт из исходных CSV Sparkov (`fraudTrain.csv`, `fraudTest.csv`, лежат рядом в `../data`, в репозиторий не входят). Если порт 8080 занят, поменяйте в `docker-compose.yml` строку `"8080:8080"` на `"8081:8080"`.
+
+<details>
+<summary><b>Полезные команды</b></summary>
+
+```bash
+docker compose down                 # остановить; данные остаются в томе pgdata
+docker compose down -v              # остановить и УДАЛИТЬ базу
+docker compose stop db              # проверить поведение без базы
+docker compose start db             # вернуть базу — сервис восстановится сам
+docker compose exec db psql -U antifraud -d antifraud   # консоль SQL (или psql_db.bat)
+backup_db.bat / restore_db.bat      # резервная копия pg_dump и восстановление
+python replay.py --n 200            # прогнать 200 операций holdout из терминала
+```
+</details>
+
+## Путь проекта по неделям
+
+| Неделя | Тема | Что сделали | Итог | Материалы |
+|:---:|---|---|---|---|
+| **1** | Модель и признаки | 3 блока признаков (профиль клиента, ритм операций, контекст), турнир моделей, тест на утечку для каждого признака, выбор операций по ожидаемым потерям | **323 389 у.е.** — 98,7% от потолка | [отчёт](reports/report.md) · [презентация](presentation/antifraud.pptx) |
+| **2** | Вторая итерация | разбор ошибок, карта паттернов мошенничества, блок E «эпизод захвата карты», версия v2, группы риска | **+3 462 у.е.** на fraudTest | [анализ ошибок](reports/week2/3_error_analysis.md) · [слайды](docs/presentations/Неделя2_презентация.pdf) |
+| **3** | Реальное время | сервис FastAPI, интерфейс оператора, панель мониторинга, журнал запросов | ответ ≈ 0,2 с, сервис = `score.py` | [слайды](docs/presentations/Неделя3_презентация_с_Docker.pdf) |
+| **4** | Docker | Dockerfile, docker-compose, healthcheck, запуск одной командой | `docker compose up` | [слайды](docs/presentations/Неделя3_презентация_с_Docker.pdf) (7–8) |
+| **5** | PostgreSQL | контейнер `db`, 3 таблицы, запись каждого запроса, метрики на SQL, поведение при падении базы, Adminer, индексы, бэкап | данные переживают перезапуск | [слайды](docs/presentations/Неделя5_презентация.pdf) |
+
+Подробный журнал изменений каждой недели лежит в [`docs/weeks/`](docs/weeks), полная техническая документация — в [`docs/ПОДРОБНО.md`](docs/ПОДРОБНО.md).
+
+## Как модель принимает решение
+
+1. **Признаки по истории карты** (35 штук): насколько сумма выше обычной для клиента и категории, сколько операций и денег было за час и сутки, расстояние до магазина, ночное время, «эпизод захвата карты».
+2. **LightGBM + калибровка** дают вероятность мошенничества `p`.
+3. **Решение**: `p ≥ 0,5` → «фрод». Порог можно менять без перезапуска (`PUT /threshold`).
+4. **Для аналитика** выдаётся группа риска, ожидаемая польза проверки `EV = p·(сумма+5) − 3 − (1−p)·25` и понятные причины («сумма дороже 99% покупок в категории…»).
+
+## API
+
+| Метод | Маршрут | Что делает |
+|---|---|---|
+| `POST` | `/predict` | оценить одну операцию → `transaction_id`, вероятность, решение, причины |
+| `POST` | `/label` | прислать фактическую метку (0/1) для `transaction_id` |
+| `GET` | `/metrics?window=5m\|1h\|all` | показатели для панели, считаются SQL-запросами |
+| `GET` | `/health` | `ok` / `degraded` (база недоступна) |
+| `PUT` | `/threshold` | сменить порог решения |
+
+Ошибки: **422** — некорректный вход, **404** — нет такой операции, **503** — база недоступна (решение не принимается, потому что его нельзя было бы записать).
+
+## База данных
+
+| Таблица | Что хранит |
+|---|---|
+| `request_log` | каждый HTTP-запрос, включая 422 и 503: время, адрес, код ответа, причина ошибки, задержка |
+| `transactions` | каждое решение модели: `id UUID`, карта, сумма, категория, оценка, решение, порог, версия модели, вся операция в `payload JSONB` |
+| `labels` | фактическая метка, ссылается на `transactions` (внешний ключ), значение только 0/1 |
+
+Схема создаётся автоматически из [`db/init.sql`](db/init.sql). Готовые запросы для аналитики лежат в [`db/queries.sql`](db/queries.sql). Индексы ускоряют запрос «за последние 5 минут» с 23,7 до **0,19 мс** на 300 тыс. строк.
+
+## Метрики на панели
+
+| Группа | Метрики |
+|---|---|
+| Здоровье сервиса | запросы к `/predict`, success rate (норма ≥ 95%), ошибки 422/500, время ответа (медиана, p95) |
+| Поведение модели | fraud rate модели, число помеченных операций, последние срабатывания |
+| Качество (по меткам) | fraud rate по факту, TP / FP / FN, точность, чувствительность, остановлено и пропущено у.е. |
+| Тревоги | success rate < 95%, p95 > 1 с, расхождение fraud rate модели и факта > 2 п.п. |
+
+## Структура репозитория
+
+```
+├── service/            FastAPI: main.py (маршруты, middleware), db.py (PostgreSQL), scoring.py (онлайн-скоринг)
+├── frontend/           Streamlit — интерфейс оператора
+├── dashboard/          Streamlit — панель мониторинга
+├── db/                 init.sql (схема), queries.sql (готовые запросы)
+├── src/                признаки, модели, экономика, оценка (недели 1–2)
+├── configs/            конфигурации экспериментов и финальных моделей
+├── artifacts/          обученные модели v1 (final) и v2 (final_v2)
+├── reports/            отчёт, турнир, экономика, анализ ошибок недели 2
+├── experiments/        скрипты исследований
+├── presentation/       презентация недели 1 и генераторы слайдов
+├── docs/               документация, презентации всех недель, скриншоты
+├── tests/              тесты сервиса
+├── train.py · score.py обучение и пакетный скоринг
+├── Dockerfile · docker-compose.yml
+└── *.bat               запуск, psql, бэкап и восстановление для Windows
+```
+
+## Обучение и пакетный скоринг (без Docker)
+
+```bash
+python -m pip install -r requirements.txt
+python train.py --config configs/final_v2.yaml                 # ≈ 2 мин, создаёт artifacts/
+python score.py --input <входной.csv> --output <выход.csv>     # пакетный скоринг
+python -m pytest tests                                         # тесты
+```
+
+> [!TIP]
+> Файл `artifacts/final/history.parquet` (история карт, 77 МБ) в репозиторий не входит: его заново создаёт `python train.py --config configs/final.yaml`.
+
+## Известные ограничения
+
+- История карт хранится в памяти одного процесса backend, поэтому несколько копий сервиса видели бы разные истории.
+- `init.sql` срабатывает только на пустом томе. Новая колонка означает `ALTER TABLE` или `down -v` (миграции Alembic не делали).
+- Отложенный период — 9 суток fraudTest (02.12–11.12.2020): другого неиспользованного периода в датасете нет.
+
+---
+
+<p align="center">
+  Сделано командой <b>Назлы · Лия · Шырайлым</b> · 2026
+</p>

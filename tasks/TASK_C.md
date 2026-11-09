@@ -3,7 +3,7 @@
 Владелец: участник C. Файл: `src/features/context.py`, префикс `c_`. Конфиг: `configs/c.yaml`.
 Дополнительно C отвечает за `src/economics.py` (политики решения) и `src/calibration.py`.
 
-Общие правила — в `PROJECT_RULES.md`, они важнее этого файла.
+Общие правила — в `CLAUDE.md`, они важнее этого файла.
 
 ---
 

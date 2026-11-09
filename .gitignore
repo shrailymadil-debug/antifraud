@@ -1,13 +1,25 @@
-# окружение и кэш
 .venv/
+venv/
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# данные (Sparkov fraudTrain.csv / fraudTest.csv — скачиваются отдельно)
-data/
-scored*.csv
+data/*.csv
+!data/holdout.csv
+logs/
+data/cache/
 
-# локальное
-_backup*/
-_git_upload_tmp/
-Неделя2_для_защиты/
+.env
+.DS_Store
+Thumbs.db
+
+# неделя 5: пароль базы и резервные копии
+.env
+backups/
+
+# не входят в репозиторий: большие файлы, которые пересоздаются
+reports/preds/
+artifacts/final/history.parquet
+_github_tmp/
