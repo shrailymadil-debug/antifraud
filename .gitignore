@@ -19,7 +19,5 @@ Thumbs.db
 .env
 backups/
 
-# не входят в репозиторий: большие файлы, которые пересоздаются
-reports/preds/
-artifacts/final/history.parquet
-_github_tmp/
+# неделя 6: временные файлы и папка holdout преподавателя не нужны в git
+data/tmp/
